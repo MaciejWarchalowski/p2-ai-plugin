@@ -1,6 +1,6 @@
 {
   "name": "mcp-example-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Example plugin demonstrating MCP server integration with Streamable HTTP transport",
   "author": {
     "name": "Maciej Warchalowski",
