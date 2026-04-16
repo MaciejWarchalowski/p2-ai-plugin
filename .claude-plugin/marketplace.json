@@ -1,0 +1,33 @@
+{
+  "name": "mcp-example-plugin",
+  "owner": {
+    "name": "Maciej Warchalowski",
+    "email": "maciej.warchalowski@wellspring.com"
+  },
+  "metadata": {
+    "description": "Example Claude Code plugin demonstrating MCP server integration with stdio transport",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "mcp-example-plugin",
+      "source": ".",
+      "description": "stdio MCP server with ping and echo tools — demonstrates Claude Code MCP integration via npx",
+      "version": "0.1.0",
+      "author": {
+        "name": "Maciej Warchalowski",
+        "email": "maciej.warchalowski@wellspring.com"
+      },
+      "license": "MIT",
+      "keywords": ["mcp", "stdio", "example", "demo", "npx"],
+      "category": "developer-tools",
+      "mcpServers": {
+        "ping-example": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["--yes", "./server"]
+        }
+      }
+    }
+  ]
+}
