@@ -1,0 +1,10 @@
+{
+  "name": "mcp-example-plugin",
+  "version": "0.1.0",
+  "description": "Example plugin demonstrating MCP server integration with Streamable HTTP transport",
+  "author": {
+    "name": "Maciej Warchalowski",
+    "email": "maciej.warchalowski@wellspring.com"
+  },
+  "keywords": ["mcp", "http", "example", "demo"]
+}
