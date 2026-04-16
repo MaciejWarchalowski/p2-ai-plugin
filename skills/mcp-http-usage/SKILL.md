@@ -1,62 +1,45 @@
 ---
-name: MCP HTTP Usage
+name: MCP stdio Usage
 description: >
-  This skill should be used when the user asks to "start the MCP server",
-  "use the ping tool", "use the echo tool", "test the MCP connection",
-  "how does HTTP transport work", "explain the MCP example plugin",
-  "connect to the streamable HTTP MCP server", or "how is the MCP
-  integration structured".
+  This skill should be used when the user asks to "use the ping tool",
+  "use the echo tool", "test the MCP connection", "how does stdio transport
+  work", "explain the MCP example plugin", "how is the MCP integration
+  structured", or "how does the server start".
 
   <example>
-  User: "Start the MCP server and test the ping tool"
-  Claude: [runs start-server.sh, verifies server is up, calls ping tool, reports pong response]
+  User: "Test the ping tool"
+  Claude: [calls ping tool, reports pong response]
   </example>
 
   <example>
-  User: "How does the HTTP transport in this plugin work?"
-  Claude: [explains streamable-http transport, .mcp.json config, how it differs from stdio]
+  User: "How does the stdio transport in this plugin work?"
+  Claude: [explains stdio transport, .mcp.json config, how Claude Code spawns the server automatically]
   </example>
-version: 0.1.0
+version: 0.2.0
 ---
 
-# MCP HTTP Usage
+# MCP stdio Usage
 
-To use MCP tools in this plugin, start the bundled HTTP server and connect Claude Code to it via `.mcp.json`. Unlike stdio servers (auto-started by Claude Code), HTTP servers run as persistent processes that must be started manually.
+This plugin uses stdio transport. Claude Code spawns `server/index.js` automatically as a child process via `npx ./server` — no manual server start required.
 
 The connection flow:
 
-1. Start `server/index.js` on port 3001
-2. Claude Code reads `.mcp.json` and opens a Streamable HTTP connection to `http://localhost:3001/mcp`
-3. Tools `ping` and `echo` become available to use
+1. Claude Code reads `.mcp.json` at session start
+2. Spawns `npx --yes ./server` as a child process
+3. Communicates with the server over stdin/stdout
+4. Tools `ping` and `echo` become available
 
-## Starting the Server
+## Prerequisites
 
-Run the start script from anywhere — it resolves paths relative to the plugin root:
-
-```bash
-bash $CLAUDE_PLUGIN_ROOT/scripts/start-server.sh
-```
-
-On first run, the script installs `node_modules` automatically before starting the server. Expected output:
-
-```
-MCP ping-example server listening at http://localhost:3001/mcp
-Tools available: ping, echo
-```
-
-To use a different port:
+Install server dependencies once before use:
 
 ```bash
-PORT=3002 bash $CLAUDE_PLUGIN_ROOT/scripts/start-server.sh
+npm install --prefix server
 ```
-
-When changing the port, update the `url` in `.mcp.json` to match and restart Claude Code.
-
-Keep the server running in a separate terminal while using Claude Code. Stop it with `Ctrl-C`.
 
 ## Verifying the Connection
 
-After starting the server, run `/mcp` in Claude Code to confirm `ping-example` appears and its tools are listed. If the server is not running, Claude Code will show a connection error for `ping-example`.
+Run `/mcp` in Claude Code to confirm `ping-example` appears and its tools are listed.
 
 ## Available Tools
 
@@ -73,77 +56,39 @@ Example response:
 
 ### echo
 
-Returns `"Echo: <message>"` — use this to verify tool round-trips (input reaches server, response returns correctly).
+Returns `"Echo: <message>"` — use this to verify tool round-trips.
 
 Parameter: `message` (string, required) — the text to echo back.
 
-Calling `echo` with `message = "hello"` returns `"Echo: hello"`.
-
 ## How `.mcp.json` Is Configured
-
-The plugin uses Streamable HTTP transport (`"type": "streamable-http"`):
 
 ```json
 {
   "ping-example": {
-    "type": "streamable-http",
-    "url": "http://localhost:3001/mcp"
+    "type": "stdio",
+    "command": "npx",
+    "args": ["--yes", "./server"]
   }
 }
 ```
 
-Compare this to a stdio server, which Claude Code spawns automatically:
+`npx ./server` resolves to the `mcp-example-server` bin entry in `server/package.json`. Claude Code manages the process lifecycle — the server starts with the session and stops when Claude Code exits.
 
-```json
-{
-  "some-tool": {
-    "command": "node",
-    "args": ["$CLAUDE_PLUGIN_ROOT/server/index.js"]
-  }
-}
-```
-
-| | Streamable HTTP | stdio |
+| | stdio | Streamable HTTP |
 |--|--|--|
-| Startup | Manual (user starts server) | Automatic (Claude Code spawns it) |
-| Lifecycle | Persistent process | Tied to Claude Code session |
-| Connection | HTTP POST/GET to URL | stdin/stdout pipe |
-| Best for | Remote/shared servers, demos | Local tools, single-session tools |
-
-> **Security note:** The `http://localhost` URL is safe for local development only. For any non-local deployment, update `.mcp.json` to use `https://`.
-
-## Installing Server Dependencies
-
-Before first use, install dependencies in `server/`:
-
-```bash
-npm install --prefix $CLAUDE_PLUGIN_ROOT/server
-```
-
-The `start-server.sh` script does this automatically. To install manually:
-
-```bash
-cd $CLAUDE_PLUGIN_ROOT/server && npm install
-```
-
-Dependencies: `@modelcontextprotocol/sdk` (MCP runtime + transport), `zod` (tool parameter validation).
+| Startup | Automatic (Claude Code spawns it) | Manual (user starts server) |
+| Lifecycle | Tied to Claude Code session | Persistent process |
+| Connection | stdin/stdout pipe | HTTP POST/GET to URL |
+| Best for | Local tools, single-session tools | Remote/shared servers |
 
 ## Troubleshooting
 
-**`/mcp` shows connection error for `ping-example`**
-Start the server with the start script.
+**`/mcp` shows error for `ping-example`**
+Run `npm install --prefix server` to ensure dependencies are installed, then restart Claude Code.
 
-**Port 3001 already in use**
-Stop the conflicting process, or start on a different port (`PORT=3002 bash .../start-server.sh`) and update `.mcp.json`.
-
-**Tools not visible after starting server**
-Restart Claude Code — MCP servers are connected at session start; new servers require a fresh session.
-
-**`node_modules` missing**
-Run `npm install --prefix $CLAUDE_PLUGIN_ROOT/server` to install dependencies.
+**Tools not visible**
+Restart Claude Code — MCP servers connect at session start.
 
 ## Additional Resources
 
-### Reference Files
-
-- **`references/server-implementation.md`** — Stateless vs stateful server patterns, tool registration details, HTTP route handling. Consult when modifying or extending the server.
+- **`references/server-implementation.md`** — stdio transport pattern and tool registration details.

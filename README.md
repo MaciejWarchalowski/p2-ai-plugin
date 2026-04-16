@@ -1,25 +1,24 @@
 # mcp-example-plugin
 
-A Claude Code plugin demonstrating MCP server integration using **Streamable HTTP transport**.
+A Claude Code plugin demonstrating MCP server integration using **stdio transport** via npx.
 
 ## What's Included
 
 | Component | Path | Purpose |
 |-----------|------|---------|
-| MCP config | `.mcp.json` | Connects Claude Code to the HTTP server |
-| Node.js server | `server/index.js` | Streamable HTTP MCP server with `ping` + `echo` tools |
-| Start script | `scripts/start-server.sh` | Installs deps and starts the server |
+| MCP config | `.mcp.json` | Tells Claude Code how to spawn the server |
+| Node.js server | `server/index.js` | stdio MCP server with `ping` + `echo` tools |
 | Skill | `skills/mcp-http-usage/` | Explains setup, tools, and transport concepts |
 
 ## Quick Start
 
-**1. Start the MCP server** (in a separate terminal):
+**1. Install server dependencies:**
 
 ```bash
-bash scripts/start-server.sh
+npm install --prefix server
 ```
 
-**2. Open or restart Claude Code** — it will connect to `http://localhost:3001/mcp` automatically.
+**2. Open or restart Claude Code** — it will automatically spawn the server via `npx ./server`.
 
 **3. Verify the connection:**
 ```
@@ -38,24 +37,21 @@ The `ping-example` server should appear with two tools: `ping` and `echo`.
 - **`ping`** — No parameters. Returns `{ status: "pong", timestamp: "..." }`.
 - **`echo`** — Parameter: `message` (string). Returns `"Echo: <message>"`.
 
-## Environment Variables
+## How It Works
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `3001` | Port for the HTTP MCP server |
+Claude Code reads `.mcp.json` and spawns the server as a child process:
 
-## Transport: Streamable HTTP vs stdio
+```json
+{
+  "ping-example": {
+    "type": "stdio",
+    "command": "npx",
+    "args": ["--yes", "./server"]
+  }
+}
+```
 
-This plugin uses **Streamable HTTP** (`"type": "streamable-http"` in `.mcp.json`), where:
-- The server runs as a persistent, manually-started process
-- Claude Code connects over HTTP POST/GET to the configured URL
-- Multiple clients can share the same server
-
-This differs from **stdio** servers, which Claude Code spawns automatically as child processes tied to the session lifetime.
-
-## Security
-
-The `.mcp.json` connects to `http://localhost:3001/mcp`. This is safe for local development only. For any non-local deployment, update the URL to `https://` and ensure the server uses TLS.
+`npx ./server` runs the `mcp-example-server` bin entry defined in `server/package.json`. The server communicates with Claude Code over stdin/stdout and is tied to the session lifetime — no manual start/stop needed.
 
 ## Author
 

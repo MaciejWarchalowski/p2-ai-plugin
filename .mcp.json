@@ -1,6 +1,7 @@
 {
   "ping-example": {
-    "type": "streamable-http",
-    "url": "http://localhost:3001/mcp"
+    "type": "stdio",
+    "command": "npx",
+    "args": ["--yes", "./server"]
   }
 }

@@ -2,8 +2,11 @@
   "name": "mcp-example-server",
   "version": "0.1.0",
   "type": "module",
-  "description": "Simple Streamable HTTP MCP server with ping and echo tools",
+  "description": "Simple stdio MCP server with ping and echo tools",
   "main": "index.js",
+  "bin": {
+    "mcp-example-server": "./index.js"
+  },
   "scripts": {
     "start": "node index.js"
   },
