@@ -1,7 +1,7 @@
 {
   "ping-example": {
     "type": "stdio",
-    "command": "npx",
-    "args": ["--yes", "./server"]
+    "command": "node",
+    "args": ["${CLAUDE_PLUGIN_ROOT}/server/index.js"]
   }
 }
