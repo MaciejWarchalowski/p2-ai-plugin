@@ -11,7 +11,7 @@
   "plugins": [
     {
       "name": "mcp-example-plugin",
-      "source": ".",
+      "source": "./",
       "description": "stdio MCP server with ping and echo tools — demonstrates Claude Code MCP integration via npx",
       "version": "0.1.0",
       "author": {
